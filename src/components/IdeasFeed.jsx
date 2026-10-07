@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
 export default function IdeasFeed({ refreshKey }) {
@@ -33,7 +34,9 @@ export default function IdeasFeed({ refreshKey }) {
           key={idea.id}
           style={{ border: '1px solid #555', borderRadius: 8, padding: 16, marginBottom: 16 }}
         >
-          <h3 style={{ marginTop: 0 }}>{idea.title}</h3>
+          <h3 style={{ marginTop: 0 }}>
+            <Link to={`/idea/${idea.id}`}>{idea.title}</Link>
+          </h3>
           <p>{idea.description}</p>
           {idea.looking_for && (
             <p>
