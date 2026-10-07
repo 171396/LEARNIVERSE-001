@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import AuthPage from './pages/AuthPage'
+import IdeaForm from './components/IdeaForm'
+import IdeasFeed from './components/IdeasFeed'
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [ready, setReady] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -23,10 +26,17 @@ export default function App() {
   if (!session) return <AuthPage />
 
   return (
-    <div style={{ maxWidth: 600, margin: '4rem auto' }}>
-      <h1>Welcome to Learniverse</h1>
-      <p>Logged in as {session.user.email}</p>
-      <button onClick={() => supabase.auth.signOut()}>Log out</button>
+    <div style={{ maxWidth: 640, margin: '2rem auto', padding: '0 1rem', textAlign: 'left' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>Learniverse</h1>
+        <div>
+          <small>{session.user.email}</small>{' '}
+          <button onClick={() => supabase.auth.signOut()}>Log out</button>
+        </div>
+      </header>
+
+      <IdeaForm userId={session.user.id} onPosted={() => setRefreshKey((k) => k + 1)} />
+      <IdeasFeed refreshKey={refreshKey} />
     </div>
   )
 }
