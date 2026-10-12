@@ -32,33 +32,41 @@ export default function IdeaForm({ userId, onPosted }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-      <h2>Share an idea</h2>
-      <input
-        placeholder="Idea title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        style={{ display: 'block', width: '100%', marginBottom: 12 }}
-      />
-      <textarea
-        placeholder="Describe your idea"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-        rows={4}
-        style={{ display: 'block', width: '100%', marginBottom: 12 }}
-      />
-      <input
-        placeholder="Looking for (e.g. a developer, a designer, funding)"
-        value={lookingFor}
-        onChange={(e) => setLookingFor(e.target.value)}
-        style={{ display: 'block', width: '100%', marginBottom: 12 }}
-      />
-      <button type="submit" disabled={loading}>
+    <form className="pitch" onSubmit={handleSubmit}>
+      <h2>Pitch your idea</h2>
+      <label className="field">
+        <span>Idea title</span>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+      </label>
+      <label className="field">
+        <span>What is it?</span>
+        <textarea
+          className="input"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
+      </label>
+      <label className="field">
+        <span>Who do you need?</span>
+        <input
+          className="input"
+          placeholder="A developer, a designer, a mentor, funding..."
+          value={lookingFor}
+          onChange={(e) => setLookingFor(e.target.value)}
+        />
+        <small className="hint">Optional. Tell people how they can help.</small>
+      </label>
+      <button className="btn btn-primary" type="submit" disabled={loading}>
         {loading ? 'Posting...' : 'Post idea'}
       </button>
-      {error && <p>{error}</p>}
+      {error && <p className="form-error">{error}</p>}
     </form>
   )
 }

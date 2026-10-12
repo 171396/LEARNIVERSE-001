@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { hueFor } from '../hue'
 
 export default function IdeasFeed({ refreshKey }) {
   const [ideas, setIdeas] = useState([])
@@ -22,30 +23,46 @@ export default function IdeasFeed({ refreshKey }) {
     load()
   }, [refreshKey])
 
-  if (loading) return <p>Loading ideas...</p>
-  if (error) return <p>{error}</p>
-  if (ideas.length === 0) return <p>No ideas yet. Be the first to post one.</p>
-
   return (
-    <div>
-      <h2>Ideas</h2>
-      {ideas.map((idea) => (
-        <div
-          key={idea.id}
-          style={{ border: '1px solid #555', borderRadius: 8, padding: 16, marginBottom: 16 }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            <Link to={`/idea/${idea.id}`}>{idea.title}</Link>
-          </h3>
-          <p>{idea.description}</p>
-          {idea.looking_for && (
-            <p>
-              <strong>Looking for:</strong> {idea.looking_for}
-            </p>
-          )}
-          <small>{new Date(idea.created_at).toLocaleDateString()}</small>
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="section-head">
+        <h2>Fresh ideas</h2>
+        <p>Open an idea to read more and join the discussion.</p>
+      </div>
+
+      {loading && <p className="empty">Loading ideas...</p>}
+      {error && <p className="form-error">{error}</p>}
+      {!loading && !error && ideas.length === 0 && (
+        <p className="empty">
+          No ideas yet. Post the first one and tell people who you need.
+        </p>
+      )}
+
+      <div className="idea-grid">
+        {ideas.map((idea) => (
+          <article key={idea.id} className={`idea-card ${hueFor(idea.id)}`}>
+            <div className="idea-card-body">
+              <h3>
+                <Link to={`/idea/${idea.id}`}>{idea.title}</Link>
+              </h3>
+              <p className="excerpt">{idea.description}</p>
+            </div>
+            <div className="idea-card-foot">
+              <span className="foot-label">
+                {idea.looking_for ? 'Looking for' : 'Open to any help'}
+              </span>
+              {idea.looking_for && <span>{idea.looking_for}</span>}
+              <span className="foot-date">
+                {new Date(idea.created_at).toLocaleDateString(undefined, {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
   )
 }

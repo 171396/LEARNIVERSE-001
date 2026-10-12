@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { hueFor } from '../hue'
 
-function CommentForm({ ideaId, userId, parentId, placeholder, onDone, onCancel }) {
+function CommentForm({ ideaId, userId, parentId, placeholder, submitLabel, onDone, onCancel }) {
   const [body, setBody] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,24 +28,25 @@ function CommentForm({ ideaId, userId, parentId, placeholder, onDone, onCancel }
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ margin: '8px 0' }}>
+    <form className="comment-form" onSubmit={handleSubmit}>
       <textarea
+        className="input"
+        aria-label={placeholder}
         placeholder={placeholder}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         required
         rows={3}
-        style={{ display: 'block', width: '100%', marginBottom: 8 }}
       />
-      <button type="submit" disabled={loading}>
-        {loading ? 'Posting...' : 'Post'}
+      <button className="btn btn-primary btn-small" type="submit" disabled={loading}>
+        {loading ? 'Posting...' : submitLabel}
       </button>{' '}
       {onCancel && (
-        <button type="button" onClick={onCancel}>
+        <button className="btn btn-small" type="button" onClick={onCancel}>
           Cancel
         </button>
       )}
-      {error && <p>{error}</p>}
+      {error && <p className="form-error">{error}</p>}
     </form>
   )
 }
@@ -52,6 +54,7 @@ function CommentForm({ ideaId, userId, parentId, placeholder, onDone, onCancel }
 function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
   const [replying, setReplying] = useState(false)
   const replies = childrenMap[comment.id] || []
+  const mine = comment.user_id === userId
 
   async function handleDelete() {
     if (!window.confirm('Delete this comment and all its replies?')) return
@@ -61,24 +64,43 @@ function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
   }
 
   return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ border: '1px solid #444', borderRadius: 8, padding: 12 }}>
-        <p style={{ margin: '0 0 8px', whiteSpace: 'pre-wrap' }}>{comment.body}</p>
-        <small>
-          {comment.user_id === userId ? 'You' : 'Member'} ·{' '}
-          {new Date(comment.created_at).toLocaleString()}
-        </small>{' '}
-        <button onClick={() => setReplying(!replying)}>Reply</button>{' '}
-        {comment.user_id === userId && <button onClick={handleDelete}>Delete</button>}
+    <div className="comment">
+      <div className="comment-box">
+        <div className={`avatar ${hueFor(comment.user_id)}`}>{mine ? 'Y' : 'M'}</div>
+        <div className="comment-main">
+          <div className="comment-head">
+            <strong>{mine ? 'You' : 'Member'}</strong>
+            <time dateTime={comment.created_at}>
+              {new Date(comment.created_at).toLocaleString(undefined, {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </time>
+          </div>
+          <p className="comment-text">{comment.body}</p>
+          <div className="comment-actions">
+            <button className="btn btn-small" onClick={() => setReplying(!replying)}>
+              {replying ? 'Close' : 'Reply'}
+            </button>
+            {mine && (
+              <button className="btn btn-small" onClick={handleDelete}>
+                Delete
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {replying && (
-        <div style={{ marginLeft: 24 }}>
+        <div className="reply-form-wrap">
           <CommentForm
             ideaId={ideaId}
             userId={userId}
             parentId={comment.id}
             placeholder="Write a reply..."
+            submitLabel="Post reply"
             onDone={() => {
               setReplying(false)
               onChanged()
@@ -89,7 +111,7 @@ function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
       )}
 
       {replies.length > 0 && (
-        <div style={{ marginLeft: 24, borderLeft: '2px solid #444', paddingLeft: 12 }}>
+        <div className="replies">
           {replies.map((reply) => (
             <CommentNode
               key={reply.id}
@@ -136,18 +158,21 @@ export default function Comments({ ideaId, userId }) {
   const topLevel = childrenMap['root'] || []
 
   return (
-    <div>
+    <section className="discussion">
       <h2>Discussion ({comments.length})</h2>
       <CommentForm
         ideaId={ideaId}
         userId={userId}
         parentId={null}
-        placeholder="Share your thoughts, feedback or offer to help..."
+        placeholder="Share feedback, ask a question or offer to help..."
+        submitLabel="Post comment"
         onDone={load}
       />
-      {loading && <p>Loading comments...</p>}
-      {error && <p>{error}</p>}
-      {!loading && topLevel.length === 0 && <p>No comments yet. Start the discussion.</p>}
+      {loading && <p className="empty">Loading comments...</p>}
+      {error && <p className="form-error">{error}</p>}
+      {!loading && topLevel.length === 0 && (
+        <p className="empty">No comments yet. Start the discussion.</p>
+      )}
       {topLevel.map((c) => (
         <CommentNode
           key={c.id}
@@ -158,6 +183,6 @@ export default function Comments({ ideaId, userId }) {
           onChanged={load}
         />
       ))}
-    </div>
+    </section>
   )
 }

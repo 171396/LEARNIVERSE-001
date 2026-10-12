@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import AuthPage from './pages/AuthPage'
+import HomePage from './pages/HomePage'
 import IdeaPage from './pages/IdeaPage'
-import IdeaForm from './components/IdeaForm'
-import IdeasFeed from './components/IdeasFeed'
+import ResourcesPage from './pages/ResourcesPage'
+import AboutPage from './pages/AboutPage'
+import NotFoundPage from './pages/NotFoundPage'
+import Logo from './components/Logo'
+
+const navClass = ({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [ready, setReady] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -24,35 +28,39 @@ export default function App() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  if (!ready) return <p>Loading...</p>
+  if (!ready) return <p className="container section">Loading...</p>
   if (!session) return <AuthPage />
 
+  const userId = session.user.id
+
   return (
-    <div style={{ maxWidth: 640, margin: '2rem auto', padding: '0 1rem', textAlign: 'left' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>
-          <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-            Learniverse
+    <>
+      <header className="site-header">
+        <div className="container header-inner">
+          <Link to="/" className="logo">
+            <Logo />
           </Link>
-        </h1>
-        <div>
-          <small>{session.user.email}</small>{' '}
-          <button onClick={() => supabase.auth.signOut()}>Log out</button>
+          <nav className="nav" aria-label="Main">
+            <NavLink to="/" end className={navClass}>Ideas</NavLink>
+            <NavLink to="/resources" className={navClass}>Resources</NavLink>
+            <NavLink to="/about" className={navClass}>About</NavLink>
+          </nav>
+          <div className="header-user">
+            <span>{session.user.email}</span>
+            <button className="btn btn-small" onClick={() => supabase.auth.signOut()}>
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
       <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <IdeaForm userId={session.user.id} onPosted={() => setRefreshKey((k) => k + 1)} />
-              <IdeasFeed refreshKey={refreshKey} />
-            </>
-          }
-        />
-        <Route path="/idea/:id" element={<IdeaPage userId={session.user.id} />} />
+        <Route path="/" element={<HomePage userId={userId} />} />
+        <Route path="/idea/:id" element={<IdeaPage userId={userId} />} />
+        <Route path="/resources" element={<ResourcesPage userId={userId} />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </div>
+    </>
   )
 }
