@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Logo from '../components/Logo'
 
 export default function AuthPage() {
-  const [mode, setMode] = useState('login')
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState(params.get('mode') === 'signup' ? 'signup' : 'login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState(null)

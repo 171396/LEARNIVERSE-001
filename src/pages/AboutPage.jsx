@@ -47,7 +47,7 @@ export default function AboutPage() {
         </div>
 
         <p>
-          <Link className="btn btn-primary" to="/">Browse ideas</Link>{' '}
+          <Link className="btn btn-primary" to="/ideas">Browse ideas</Link>{' '}
           <Link className="btn" to="/resources">Open the Resources centre</Link>
         </p>
       </main>

@@ -7,7 +7,7 @@ export default function NotFoundPage() {
       <p style={{ margin: '1rem 0' }}>
         This page does not exist, or it has moved.
       </p>
-      <Link className="btn btn-primary" to="/">Go to ideas</Link>
+      <Link className="btn btn-primary" to="/">Go to the home page</Link>
     </main>
   )
 }
