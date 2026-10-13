@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { hueFor } from '../hue'
+import { useProfiles } from '../useProfiles'
 
 function CommentForm({ ideaId, userId, parentId, placeholder, submitLabel, onDone, onCancel }) {
   const [body, setBody] = useState('')
@@ -51,10 +53,11 @@ function CommentForm({ ideaId, userId, parentId, placeholder, submitLabel, onDon
   )
 }
 
-function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
+function CommentNode({ comment, childrenMap, profiles, ideaId, userId, onChanged }) {
   const [replying, setReplying] = useState(false)
   const replies = childrenMap[comment.id] || []
   const mine = comment.user_id === userId
+  const name = profiles[comment.user_id]?.display_name || 'New member'
 
   async function handleDelete() {
     if (!window.confirm('Delete this comment and all its replies?')) return
@@ -66,10 +69,12 @@ function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
   return (
     <div className="comment">
       <div className="comment-box">
-        <div className={`avatar ${hueFor(comment.user_id)}`}>{mine ? 'Y' : 'M'}</div>
+        <div className={`avatar ${hueFor(comment.user_id)}`} aria-hidden="true">
+          {name[0].toUpperCase()}
+        </div>
         <div className="comment-main">
           <div className="comment-head">
-            <strong>{mine ? 'You' : 'Member'}</strong>
+            <Link to={`/profile/${comment.user_id}`}>{mine ? `${name} (you)` : name}</Link>
             <time dateTime={comment.created_at}>
               {new Date(comment.created_at).toLocaleString(undefined, {
                 day: 'numeric',
@@ -117,6 +122,7 @@ function CommentNode({ comment, childrenMap, ideaId, userId, onChanged }) {
               key={reply.id}
               comment={reply}
               childrenMap={childrenMap}
+              profiles={profiles}
               ideaId={ideaId}
               userId={userId}
               onChanged={onChanged}
@@ -149,6 +155,8 @@ export default function Comments({ ideaId, userId }) {
     load()
   }, [load])
 
+  const profiles = useProfiles(comments.map((c) => c.user_id))
+
   const childrenMap = {}
   comments.forEach((c) => {
     const key = c.parent_id || 'root'
@@ -178,6 +186,7 @@ export default function Comments({ ideaId, userId }) {
           key={c.id}
           comment={c}
           childrenMap={childrenMap}
+          profiles={profiles}
           ideaId={ideaId}
           userId={userId}
           onChanged={load}
